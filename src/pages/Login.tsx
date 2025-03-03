@@ -37,12 +37,7 @@ const Login = () => {
       localStorage.setItem('currentUser', JSON.stringify(user));
       console.log('Login successful:', data);
       
-      // Redirect based on role
-      if (user.role.toLowerCase() === 'customer') {
-        navigate('/customer-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      navigate('/dashboard');
     } else {
       alert('Invalid email or password');
     }

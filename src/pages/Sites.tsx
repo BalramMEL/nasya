@@ -42,7 +42,7 @@ const Sites = () => {
       : [
           {
             id: 1,
-            image: 'https://dummyimage.com/skyscraper/f0f/f',
+            image: 'https://picsum.photos/seed/picsum/200/300',
             name: 'Supermarket',
             address: '123 Main St FC road',
             city: 'Pune',
