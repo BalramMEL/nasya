@@ -39,7 +39,7 @@ const Signup = () => {
     localStorage.setItem('currentUser', JSON.stringify(newUser));
     
     console.log('User signed up:', data);
-    navigate('/customer-dashboard');
+    navigate('/dashboard');    
   };
 
   return (
