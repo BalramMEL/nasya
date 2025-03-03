@@ -1,3 +1,4 @@
+// src/pages/Sites.tsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -18,8 +19,9 @@ import {
   Paper,
   Typography,
   InputAdornment,
+  Avatar,
 } from '@mui/material';
-import { Edit, Delete, Search as SearchIcon } from '@mui/icons-material';
+import { Edit, Delete, Search as SearchIcon, UploadFile } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import Layout from '../components/Layout';
 
@@ -57,6 +59,7 @@ const Sites = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
+  const [imagePreview, setImagePreview] = useState<string>('');
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Site>();
 
   useEffect(() => {
@@ -67,6 +70,7 @@ const Sites = () => {
     if (site) {
       setEditSite(site);
       setValue('image', site.image);
+      setImagePreview(site.image);
       setValue('name', site.name);
       setValue('address', site.address);
       setValue('city', site.city);
@@ -76,6 +80,7 @@ const Sites = () => {
     } else {
       setEditSite(null);
       reset();
+      setImagePreview('');
     }
     setOpen(true);
   };
@@ -83,6 +88,7 @@ const Sites = () => {
   const handleClose = () => {
     setOpen(false);
     setEditSite(null);
+    setImagePreview('');
     reset();
   };
 
@@ -91,6 +97,7 @@ const Sites = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
+        setImagePreview(reader.result as string);
         setValue('image', reader.result as string);
       };
       reader.readAsDataURL(file);
@@ -99,15 +106,35 @@ const Sites = () => {
 
   const onSubmit = (data: Site) => {
     if (editSite) {
-      setSites(sites.map((s) => (s.id === editSite.id ? { ...s, ...data } : s)));
+      // Update the existing site
+      const updatedSites = sites.map((s) => (s.id === editSite.id ? { ...s, ...data } : s));
+      // Reassign IDs based on the new order
+      const reorderedSites = updatedSites.map((site, index) => ({
+        ...site,
+        id: index + 1,
+      }));
+      setSites(reorderedSites);
     } else {
-      setSites([...sites, { ...data, id: sites.length + 1 }]);
+      // Add new site and reassign IDs
+      const newSites = [...sites, { ...data, id: sites.length + 1 }];
+      setSites(newSites);
     }
     handleClose();
   };
 
   const handleDelete = (id: number) => {
-    setSites(sites.filter((s) => s.id !== id));
+    // Filter out the deleted site
+    const updatedSites = sites.filter((s) => s.id !== id);
+    // Reassign IDs based on the new order
+    const reorderedSites = updatedSites.map((site, index) => ({
+      ...site,
+      id: index + 1,
+    }));
+    setSites(reorderedSites);
+    // Reset page to 0 if the current page becomes empty after deletion
+    if (page * rowsPerPage >= reorderedSites.length && page > 0) {
+      setPage(Math.max(0, Math.ceil(reorderedSites.length / rowsPerPage) - 1));
+    }
   };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -128,29 +155,27 @@ const Sites = () => {
   return (
     <Layout title="Sites Management">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {/* Add Site Button */}
         <Button
           variant="contained"
           onClick={() => handleOpen()}
           sx={{
             borderRadius: 2,
             padding: '10px 20px',
-            background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)', // Gradient background
-            boxShadow: '0 3px 6px rgba(0,0,0,0.1)', // Subtle shadow
-            textTransform: 'none', // Remove uppercase
-            fontWeight: 500, // Semibold text
+            background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)',
+            boxShadow: '0 3px 6px rgba(0,0,0,0.1)',
+            textTransform: 'none',
+            fontWeight: 500,
             transition: 'all 0.3s ease',
             '&:hover': {
-              background: 'linear-gradient(45deg, #1565c0 30%, #2196f3 90%)', // Darker gradient on hover
-              transform: 'translateY(-2px)', // Slight lift on hover
-              boxShadow: '0 5px 10px rgba(0,0,0,0.15)', // Enhanced shadow on hover
+              background: 'linear-gradient(45deg, #1565c0 30%, #2196f3 90%)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 5px 10px rgba(0,0,0,0.15)',
             },
           }}
         >
           Add Site
         </Button>
 
-        {/* Search Bar */}
         <TextField
           variant="outlined"
           placeholder="Search sites..."
@@ -167,10 +192,10 @@ const Sites = () => {
                 borderColor: 'rgba(0,0,0,0.1)',
               },
               '&:hover fieldset': {
-                borderColor: '#1976d2', 
+                borderColor: '#1976d2',
               },
               '&.Mui-focused fieldset': {
-                borderColor: '#1976d2', 
+                borderColor: '#1976d2',
               },
             },
           }}
@@ -249,13 +274,31 @@ const Sites = () => {
         <DialogTitle>{editSite ? 'Edit Site' : 'Add Site'}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent>
-            <Input
-              type="file"
-              fullWidth
-              inputProps={{ accept: 'image/*' }}
-              onChange={handleImageUpload}
-              sx={{ mb: 2 }}
-            />
+            <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
+              <Avatar src={imagePreview} sx={{ width: 80, height: 80 }} />
+              <Button
+                variant="contained"
+                component="label"
+                startIcon={<UploadFile />}
+                sx={{
+                  borderRadius: 2,
+                  padding: '8px 16px',
+                  background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #1565c0 30%, #2196f3 90%)',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                  },
+                }}
+              >
+                Upload Image
+                <input type="file" hidden onChange={handleImageUpload} accept="image/*" />
+              </Button>
+            </Box>
             {errors.image && (
               <Typography color="error" variant="body2">
                 {errors.image.message}
@@ -313,10 +356,6 @@ const Sites = () => {
               margin="normal"
               {...register('postalCode', { 
                 required: 'Postal Code is required',
-                // pattern: {
-                //   value: /^\d{5}(-\d{4})?$/,
-                //   message: 'Invalid postal code format'
-                // }
               })}
               error={!!errors.postalCode}
               helperText={errors.postalCode?.message}

@@ -85,9 +85,16 @@ const Roles = () => {
     handleClose();
   };
 
-  const handleDelete = (id: number) => {
-    setRoles(roles.filter((r) => r.id !== id));
-  };
+ const handleDelete = (id: number) => {
+  const updatedRoles = roles.filter((r) => r.id !== id);
+
+  const reIndexedRoles = updatedRoles.map((role, index) => ({
+    ...role,
+    id: index + 1, // Assign new IDs starting from 1
+  }));
+
+  setRoles(reIndexedRoles);
+};
 
   const filteredRoles = roles.filter((role) =>
     Object.values(role).some((value) =>

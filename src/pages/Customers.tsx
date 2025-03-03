@@ -1,3 +1,4 @@
+// src/pages/Customers.tsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -50,8 +51,8 @@ const Customers = () => {
   const [sites] = useState(() => JSON.parse(localStorage.getItem('sites') || '[]'));
   const [open, setOpen] = useState(false);
   const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
-    const [page, setPage] = useState(0);
-    const [imagePreview, setImagePreview] = useState<string>('');
+  const [page, setPage] = useState(0);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Customer>();
@@ -64,8 +65,8 @@ const Customers = () => {
   const handleOpen = (customer?: Customer) => {
     if (customer) {
       setEditCustomer(customer);
-        setValue('image', customer.image);
-        setImagePreview(customer.image);
+      setValue('image', customer.image);
+      setImagePreview(customer.image);
       setValue('fullName', customer.fullName);
       setValue('siteId', customer.siteId);
       setValue('email', customer.email);
@@ -78,18 +79,18 @@ const Customers = () => {
       setValue('currentLocation', customer.currentLocation);
       setValue('password', customer.password);
     } else {
-        setEditCustomer(null);
-        reset();
-        setValue('password', 'default123'); // Default password
-        setImagePreview('');
+      setEditCustomer(null);
+      reset();
+      setValue('password', 'default123');
+      setImagePreview('');
     }
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-      setEditCustomer(null);
-      setImagePreview('');
+    setEditCustomer(null);
+    setImagePreview('');
     reset();
   };
 
@@ -107,15 +108,35 @@ const Customers = () => {
 
   const onSubmit = (data: Customer) => {
     if (editCustomer) {
-      setCustomers(customers.map((c) => (c.id === editCustomer.id ? { ...c, ...data } : c)));
+      // Update the existing customer
+      const updatedCustomers = customers.map((c) => (c.id === editCustomer.id ? { ...c, ...data } : c));
+      // Reassign IDs based on the new order
+      const reorderedCustomers = updatedCustomers.map((customer, index) => ({
+        ...customer,
+        id: index + 1,
+      }));
+      setCustomers(reorderedCustomers);
     } else {
-      setCustomers([...customers, { ...data, id: customers.length + 1 }]);
+      // Add new customer and reassign IDs
+      const newCustomers = [...customers, { ...data, id: customers.length + 1 }];
+      setCustomers(newCustomers);
     }
     handleClose();
   };
 
   const handleDelete = (id: number) => {
-    setCustomers(customers.filter((c) => c.id !== id));
+    // Filter out the deleted customer
+    const updatedCustomers = customers.filter((c) => c.id !== id);
+    // Reassign IDs based on the new order
+    const reorderedCustomers = updatedCustomers.map((customer, index) => ({
+      ...customer,
+      id: index + 1,
+    }));
+    setCustomers(reorderedCustomers);
+    // Reset page to 0 if the current page becomes empty after deletion
+    if (page * rowsPerPage >= reorderedCustomers.length && page > 0) {
+      setPage(Math.max(0, Math.ceil(reorderedCustomers.length / rowsPerPage) - 1));
+    }
   };
 
   const handleViewDashboard = (customer: Customer) => {
